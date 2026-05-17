@@ -10,8 +10,8 @@
  * 5. Agent 5 — Negotiation Advisor: Redlines, strategy, email template
  */
 
-import dotenv from 'dotenv';
 import { callGemini, parseGeminiJson, FLASH_MODEL, PRO_MODEL } from './services/googleGemini.js';
+
 
 /** Legal disclaimer appended to all results and email templates. */
 export const DISCLAIMER =
