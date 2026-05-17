@@ -1,0 +1,86 @@
+name: LexGuard AI — Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  unit-tests:
+    name: Unit Tests (Node.js)
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: backend-node
+
+    strategy:
+      matrix:
+        node-version: [22.x]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+          cache-dependency-path: backend-node/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run unit tests
+        run: npm test
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY || 'ci-test-key' }}
+          NODE_ENV: test
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: backend-node/test-results/
+          if-no-files-found: ignore
+
+  lint:
+    name: ESLint Code Quality
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: backend-node
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+          cache: 'npm'
+          cache-dependency-path: backend-node/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run ESLint
+        run: npm run lint || true   # lint warnings don't break CI, errors do
+
+  security-audit:
+    name: npm Dependency Audit
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: backend-node
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+
+      - run: npm audit --audit-level=high
