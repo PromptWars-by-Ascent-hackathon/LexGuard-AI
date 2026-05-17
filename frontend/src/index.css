@@ -1,0 +1,351 @@
+/* =====================================================
+   LexGuard AI — Global Design System
+   Auremin-Inspired Architectural & Editorial Theme
+   ===================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Syne:wght@400;500;600;700;800;900&display=swap');
+
+/* ── CSS Variables ───────────────────────────────── */
+:root {
+  /* Core Palette: Carbon Black & Architectural Warm Sand */
+  --bg-deepest:   #111111;
+  --bg-base:      #161616;
+  --bg-surface:   #1d1d1d;
+  --bg-elevated:  #242424;
+
+  /* Accent sand cream */
+  --brand-blue:   #eae6df; /* Warm Sand Accent */
+  --brand-violet: #8c8273; /* Bronze Accent */
+  --brand-glow:   rgba(234, 230, 223, 0.08);
+
+  /* Glass/Card Grid elements */
+  --glass-bg:     #181818;
+  --glass-border: #333230; /* Fine Architectural Line */
+  --glass-hover:  #222222;
+
+  /* Severity (adapted to warm editorial palette) */
+  --critical:     #e25c5c;
+  --critical-bg:  rgba(226, 92, 92, 0.1);
+  --high:         #e28d5c;
+  --high-bg:      rgba(226, 141, 92, 0.1);
+  --medium:       #cca462;
+  --medium-bg:    rgba(204, 164, 98, 0.1);
+  --low:          #6b9e78;
+  --low-bg:       rgba(107, 158, 120, 0.1);
+  --info:         #8c8273;
+  --info-bg:      rgba(140, 130, 115, 0.1);
+
+  /* Typography */
+  --text-primary:   #eae6df; /* Soft Cream text */
+  --text-secondary: #b5b0a7; /* Muted Warm Grey */
+  --text-muted:     #6e6a64;
+
+  /* Borders */
+  --border-subtle: #2d2b29;
+  --border-accent: #eae6df;
+
+  /* Shadows (Minimal, clean flat industrial style) */
+  --shadow-sm: 0 2px 4px rgba(0,0,0,0.5);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.6);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.7);
+  --glow-blue: 0 0 20px rgba(234,230,223,0.05);
+
+  /* Transitions */
+  --transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+  --transition-slow: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+[data-theme='light'] {
+  --bg-deepest:   #f8f6f2; /* Soft light sand */
+  --bg-base:      #f0eee9;
+  --bg-surface:   #e8e5df;
+  --bg-elevated:  #e0ddd7;
+
+  --brand-blue:   #111111; /* Dark text for light mode */
+  --brand-violet: #8c8273;
+  --brand-glow:   rgba(17, 17, 17, 0.05);
+
+  --glass-bg:     #ffffff;
+  --glass-border: #dcd8d1;
+  --glass-hover:  #faf8f5;
+
+  --text-primary:   #111111;
+  --text-secondary: #4a4846;
+  --text-muted:     #8a8680;
+
+  --border-subtle: #dcd8d1;
+  --border-accent: #111111;
+
+  --glow-blue: 0 0 20px rgba(0,0,0,0.05);
+  
+  --critical:     #d32f2f;
+  --critical-bg:  rgba(211, 47, 47, 0.1);
+  --high:         #c26527;
+  --high-bg:      rgba(194, 101, 39, 0.1);
+  --medium:       #b38b46;
+  --medium-bg:    rgba(179, 139, 70, 0.1);
+  --low:          #4c855a;
+  --low-bg:       rgba(76, 133, 90, 0.1);
+  --info:         #6b655a;
+  --info-bg:      rgba(107, 101, 90, 0.1);
+}
+
+/* ── Reset & Base ────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { font-size: 16px; scroll-behavior: smooth; }
+
+body {
+  font-family: 'Inter', -apple-system, sans-serif;
+  background: var(--bg-deepest);
+  color: var(--text-primary);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* Visible Industrial Grid Layout lines */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: 
+    linear-gradient(to right, rgba(234, 230, 223, 0.02) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(234, 230, 223, 0.02) 1px, transparent 1px);
+  background-size: 80px 80px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+#root { position: relative; z-index: 1; }
+
+/* ── Typography ──────────────────────────────────── */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+}
+
+p { line-height: 1.6; color: var(--text-secondary); font-weight: 400; }
+a { color: var(--text-primary); text-decoration: underline; transition: var(--transition); }
+a:hover { opacity: 0.8; }
+
+/* Upper-case Meta Labeling (Architectural feel) */
+.meta-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--brand-violet);
+  margin-bottom: 8px;
+  display: block;
+}
+
+/* ── Solid Architectural Card ───────────────────── */
+.glass-card {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 0px; /* Sharp Industrial Corners */
+  transition: var(--transition);
+}
+.glass-card:hover { 
+  border-color: var(--text-muted); 
+  background: var(--glass-hover); 
+}
+
+/* ── Buttons ─────────────────────────────────────── */
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 12px 28px;
+  border-radius: 9999px; /* Rounded pill buttons */
+  font-family: 'Inter', sans-serif;
+  font-weight: 600; font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  cursor: pointer; border: none; transition: var(--transition);
+  white-space: nowrap;
+}
+.btn-primary {
+  background: var(--text-primary);
+  color: #111111;
+  box-shadow: none;
+}
+.btn-primary:hover {
+  background: #ffffff;
+  transform: translateY(-1px);
+}
+.btn-ghost {
+  background: transparent;
+  color: var(--text-primary);
+  border: 1px solid var(--glass-border);
+}
+.btn-ghost:hover {
+  background: var(--text-primary);
+  color: #111111;
+  border-color: var(--text-primary);
+}
+.btn-danger {
+  background: var(--critical);
+  color: #fff;
+}
+.btn-danger:hover {
+  background: #f16868;
+}
+
+/* ── Severity Badges (Pills) ────────────────────── */
+.badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 4px 12px; border-radius: 9999px;
+  font-size: 0.65rem; font-weight: 700; letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.badge-critical { background: var(--critical-bg); color: var(--critical); border: 1px solid rgba(226,92,92,0.2); }
+.badge-high     { background: var(--high-bg); color: var(--high); border: 1px solid rgba(226,141,92,0.2); }
+.badge-medium   { background: var(--medium-bg); color: var(--medium); border: 1px solid rgba(204,164,98,0.2); }
+.badge-low      { background: var(--low-bg); color: var(--low); border: 1px solid rgba(107,158,120,0.2); }
+.badge-informational { background: var(--info-bg); color: var(--info); border: 1px solid rgba(140,130,115,0.2); }
+
+/* ── Inputs (Architectural Sharp Edges) ────────── */
+input, textarea, select {
+  width: 100%;
+  background: var(--bg-surface);
+  border: 1px solid var(--glass-border);
+  border-radius: 0px;
+  padding: 12px 16px;
+  color: var(--text-primary);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.85rem;
+  outline: none;
+  transition: var(--transition);
+}
+input:focus, textarea:focus, select:focus {
+  border-color: var(--text-primary);
+}
+
+/* ── Scrollbar ───────────────────────────────────── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 0; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+/* ── Utility ─────────────────────────────────────── */
+.flex { display: flex; }
+.flex-col { display: flex; flex-direction: column; }
+.items-center { align-items: center; }
+.justify-center { justify-content: center; }
+.justify-between { justify-content: space-between; }
+.gap-2 { gap: 8px; }
+.gap-4 { gap: 16px; }
+.gap-6 { gap: 24px; }
+.w-full { width: 100%; }
+.text-center { text-align: center; }
+.text-sm { font-size: 0.875rem; }
+.text-xs { font-size: 0.75rem; }
+.font-bold { font-weight: 700; }
+.truncate { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.opacity-60 { opacity: 0.6; }
+
+/* ── Animations ──────────────────────────────────── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes pulse-glow {
+  0%, 100% { transform: scale(1); opacity: 0.8; }
+  50%       { transform: scale(1.3); opacity: 1; }
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.animate-fadeUp  { animation: fadeUp 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards; }
+.animate-spin    { animation: spin 0.8s linear infinite; }
+
+/* ── Spinner ─────────────────────────────────────── */
+.spinner {
+  width: 18px; height: 18px;
+  border: 2px solid rgba(234,230,223,0.1);
+  border-top-color: var(--text-primary);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+/* ── Disclaimer Banner ───────────────────────────── */
+.disclaimer-banner {
+  background: var(--bg-surface);
+  border-top: 1px solid var(--glass-border);
+  border-bottom: 1px solid var(--glass-border);
+  padding: 14px 20px;
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  text-align: center;
+  line-height: 1.6;
+  letter-spacing: 0.02em;
+}
+
+/* ── Progress Steps (Editorial Accordion/Square) ── */
+.progress-step {
+  display: flex; align-items: center; gap: 16px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border-subtle);
+  border-radius: 0px;
+  transition: var(--transition);
+}
+.progress-step.active { background: var(--bg-surface); }
+.progress-step.done   { opacity: 0.55; }
+
+/* ── Tab Bar (Minimal Architectural Underline) ───── */
+.tab-bar {
+  display: flex; gap: 1px;
+  background: var(--glass-border);
+  border-radius: 0px;
+  padding: 0;
+  border: 1px solid var(--glass-border);
+}
+.tab-btn {
+  flex: 1;
+  padding: 12px 20px; border-radius: 0px;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.75rem; font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-secondary); background: var(--bg-base);
+  border: none; cursor: pointer;
+  transition: var(--transition);
+}
+.tab-btn:hover {
+  color: var(--text-primary);
+  background: var(--bg-surface);
+}
+.tab-btn.active {
+  background: var(--text-primary);
+  color: #111111;
+}
+
+/* Back Button Component */
+.back-btn {
+  background: var(--bg-surface);
+  border: 1px solid var(--glass-border);
+  color: var(--text-primary);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 8px 16px;
+  border-radius: 9999px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: var(--transition);
+  margin-bottom: 24px;
+}
+.back-btn:hover {
+  background: var(--bg-elevated);
+  transform: translateX(-4px);
+}
+
+/* ── Responsive ──────────────────────────────────── */
+@media (max-width: 768px) {
+  .hide-mobile { display: none !important; }
+}

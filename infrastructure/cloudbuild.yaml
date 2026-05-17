@@ -1,0 +1,25 @@
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/promptwars-community-x-ascen/lexguard-backend:$COMMIT_SHA', './backend']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/promptwars-community-x-ascen/lexguard-backend:$COMMIT_SHA']
+
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'lexguard-backend'
+      - '--image=gcr.io/promptwars-community-x-ascen/lexguard-backend:$COMMIT_SHA'
+      - '--region=us-central1'
+      - '--platform=managed'
+      - '--allow-unauthenticated'
+      - '--memory=2Gi'
+      - '--cpu=2'
+      - '--max-instances=10'
+      - '--set-env-vars=GEMINI_API_KEY=$$GEMINI_API_KEY,GCP_PROJECT_ID=promptwars-community-x-ascen'
+      - '--set-secrets=GEMINI_API_KEY=lexguard-gemini-key:latest'
+
+images:
+  - 'gcr.io/promptwars-community-x-ascen/lexguard-backend:$COMMIT_SHA'

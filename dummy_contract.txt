@@ -1,0 +1,23 @@
+EMPLOYMENT AGREEMENT
+
+This Employment Agreement ("Agreement") is made effective as of today, between LexGuard AI ("Employer") and the undersigned employee ("Employee").
+
+1. POSITION AND DUTIES
+The Employer agrees to employ the Employee as a Software Engineer. The Employee agrees to perform all duties assigned to them. The Employer reserves the right to change the Employee's title, duties, and reporting relationships at any time, for any reason, with or without notice.
+
+2. COMPENSATION
+The Employee will be paid a base salary of $100,000 per year. The Employer may reduce this salary at its sole discretion at any point.
+
+3. NON-COMPETE
+The Employee agrees that during their employment and for a period of 5 years following termination of employment for any reason, they will not work for any competitor worldwide.
+
+4. INTELLECTUAL PROPERTY
+All intellectual property created by the Employee, whether during or outside of working hours, using company or personal equipment, shall be the exclusive property of the Employer.
+
+5. TERMINATION
+The Employer may terminate this Agreement at any time, with or without cause, and without severance pay.
+
+6. GOVERNING LAW
+This Agreement shall be governed by the laws of the State of Nowhere.
+
+IN WITNESS WHEREOF, the parties have executed this Agreement.

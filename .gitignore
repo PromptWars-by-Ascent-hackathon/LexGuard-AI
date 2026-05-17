@@ -1,0 +1,32 @@
+# Python backend
+backend/__pycache__/
+backend/**/__pycache__/
+backend/*.pyc
+backend/.env
+backend/firebase-service-account.json
+backend/venv/
+backend/.venv/
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+frontend/.env.local
+
+# IDE
+.vscode/
+.idea/
+*.DS_Store
+
+# Logs
+*.log
+logs/
+
+# Build artifacts
+dist/
+build/
+
+# Backend Node.js
+backend-node/node_modules/
+backend-node/.env
+backend-node/.env.*
