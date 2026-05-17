@@ -1,5 +1,7 @@
 // LexGuard API service
-const API_BASE = 'https://lexguard-backend-519047861069.us-central1.run.app';
+const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? 'http://localhost:8000'
+  : '';
 
 export const api = {
   // Upload document and start analysis

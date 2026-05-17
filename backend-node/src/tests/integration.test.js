@@ -53,6 +53,13 @@ describe('Integration: LexGuard API', () => {
         await new Promise((r) => setTimeout(r, 500));
     });
 
+    after(async () => {
+        if (serverModule && serverModule.server) {
+            serverModule.server.close();
+        }
+    });
+
+
     it('GET /api/health returns 200 with healthy status', async () => {
         const res = await fetch(`${BASE}/api/health`);
         assert.equal(res.status, 200);
@@ -63,9 +70,10 @@ describe('Integration: LexGuard API', () => {
 
     it('POST /api/v1/documents/upload with valid TXT returns session_id', async () => {
         const sampleContract = readFileSync(
-            resolve(__dirname, '../../../../dummy_contract.txt'),
+            resolve(__dirname, '../../../dummy_contract.txt'),
             'utf-8'
         );
+
 
         const res = await uploadTextFile(sampleContract);
         // It returns 200 when pipeline starts, OR 500 if Gemini key is invalid (expected in CI)

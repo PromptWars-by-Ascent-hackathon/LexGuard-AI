@@ -7,8 +7,10 @@ from datetime import datetime
 from typing import Optional
 from fastapi import FastAPI, File, UploadFile, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
+
 
 from config import settings
 from services.document_extractor import extract_text
@@ -186,6 +188,28 @@ async def list_sessions():
     sessions_summary.sort(key=lambda x: x.get("created_at",""), reverse=True)
     return {"sessions": sessions_summary, "total": len(sessions_summary)}
 
+# ─── Static Files & SPA Routing ────────────────────────────────────────────────
+static_dir = os.path.join(os.path.dirname(__file__), "static")
+
+if os.path.exists(static_dir):
+    # Mount assets folder if it exists
+    assets_dir = os.path.join(static_dir, "assets")
+    if os.path.exists(assets_dir):
+        app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
+
+    # Catch-all route to serve the SPA index.html for all frontend routes
+    @app.get("/{catchall:path}")
+    async def serve_spa(catchall: str):
+        # Exclude API endpoints or docs from catchall (FastAPI matches registered paths first, but as a safeguard)
+        if catchall.startswith("api/") or catchall.startswith("docs") or catchall.startswith("redoc"):
+            raise HTTPException(status_code=404, detail="Not Found")
+
+        index_file = os.path.join(static_dir, "index.html")
+        if os.path.exists(index_file):
+            return FileResponse(index_file)
+        return {"message": "LexGuard API is running. Frontend static assets not found."}
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+

@@ -36,11 +36,12 @@ app.use(helmet({
     crossOriginResourcePolicy: { policy: 'cross-origin' },
 }));
 
+const corsOrigins = process.env.CORS_ORIGINS;
 app.use(cors({
-    origin: process.env.CORS_ORIGINS
-        ? process.env.CORS_ORIGINS.split(',').map((o) => o.trim())
-        : ['http://localhost:5173', 'http://localhost:3000'],
-    methods: ['GET', 'POST'],
+    origin: corsOrigins && corsOrigins !== '*'
+        ? corsOrigins.split(',').map((o) => o.trim())
+        : '*',
+    methods: ['GET', 'POST', 'OPTIONS'],
 }));
 
 app.use(express.json({ limit: '1mb' })); // Prevent JSON body abuse
@@ -213,8 +214,10 @@ app.use((err, _req, res, _next) => {
 
 // ── Start Server ───────────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 8000;
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
     console.log(`✅ LexGuard AI backend running on port ${PORT}`);
 });
 
+export { app, server };
 export default app; // For testing
+
