@@ -1,5 +1,5 @@
 // LexGuard API service
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_BASE = 'https://lexguard-backend-519047861069.us-central1.run.app';
 
 export const api = {
   // Upload document and start analysis

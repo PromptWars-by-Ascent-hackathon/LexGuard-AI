@@ -59,12 +59,13 @@ export default function Navbar() {
         }} className="hide-mobile">
           Powered by Gemini AI
         </span>
-        <button onClick={toggleTheme} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', display: 'flex', transition: 'var(--transition)' }}
+        <button onClick={toggleTheme} aria-label={theme === 'dark' ? "Switch to light theme" : "Switch to dark theme"} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', display: 'flex', transition: 'var(--transition)' }}
           onMouseEnter={e => e.currentTarget.style.color = 'var(--text-primary)'}
           onMouseLeave={e => e.currentTarget.style.color = 'var(--text-muted)'}>
           {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
         </button>
         <a href="https://github.com/Ndheeraj906/LexGuard-AI" target="_blank" rel="noopener noreferrer"
+          aria-label="View repository on GitHub"
           style={{ color: 'var(--text-muted)', display: 'flex', transition: 'var(--transition)' }}
           onMouseEnter={e => e.currentTarget.style.color = 'var(--text-primary)'}
           onMouseLeave={e => e.currentTarget.style.color = 'var(--text-muted)'}>

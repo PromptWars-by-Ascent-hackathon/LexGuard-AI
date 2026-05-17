@@ -1,0 +1,7 @@
+# Exclude common files
+node_modules/
+dist/
+.git/
+
+# Allow .env.production to be uploaded for build time injection
+!.env.production
