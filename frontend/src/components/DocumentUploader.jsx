@@ -1,14 +1,13 @@
 import { useState, useCallback, useRef } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Upload, FileText, AlertCircle, CheckCircle, Loader } from 'lucide-react';
+import { Upload, FileText, AlertCircle, CheckCircle } from 'lucide-react';
 import { api, DISCLAIMER } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 const AGENT_STEPS = [
   { num: 1, name: 'Extractor',          desc: 'Segmenting clauses & entities' },
   { num: 2, name: 'Classifier',         desc: 'Assessing risk severity' },
-  { num: 3, name: 'Legal Reasoner',     desc: 'Deep legal reasoning + RAG' },
-  { num: 4, name: 'Explainer',          desc: 'Plain-English explanations' },
-  { num: 5, name: 'Negotiation Advisor',desc: 'Building negotiation strategy' },
+  { num: 3, name: 'Deep Legal Analyzer',desc: 'Reasoning, explaining & strategy' },
 ];
 
 export default function DocumentUploader({ onAnalysisComplete }) {
@@ -18,6 +17,7 @@ export default function DocumentUploader({ onAnalysisComplete }) {
   const [agentMsg, setAgentMsg]   = useState('');
   const [error, setError]         = useState(null);
   const pollRef                   = useRef(null);
+  const { user }                  = useAuth();
 
   const onDrop = useCallback((accepted) => {
     if (accepted[0]) { setFile(accepted[0]); setError(null); }
@@ -51,7 +51,7 @@ export default function DocumentUploader({ onAnalysisComplete }) {
           setError('Analysis failed. Please try again.');
           setUploading(false);
         }
-      } catch (e) {
+      } catch {
         clearInterval(pollRef.current);
         setError('Connection error. Please try again.');
         setUploading(false);
@@ -64,7 +64,7 @@ export default function DocumentUploader({ onAnalysisComplete }) {
     setUploading(true); setError(null); setCurrentAgent(0);
     setAgentMsg('Uploading document...');
     try {
-      const result = await api.uploadDocument(file);
+      const result = await api.uploadDocument(file, user?.phone);
       if (result.session_id) await pollStatus(result.session_id);
     } catch (e) {
       setError(e.message || 'Upload failed');

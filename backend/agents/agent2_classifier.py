@@ -2,6 +2,7 @@
 AGENT 2 — CLASSIFIER
 Uses Gemini Flash to classify each clause by severity and risk dimension.
 """
+import json
 from agents import call_model, extract_json, FLASH_MODEL
 
 SYSTEM_PROMPT = """You are a legal risk classifier AI (Agent 2 — Classifier).
@@ -62,7 +63,7 @@ Clauses to classify:
 Classify each clause. Return JSON array matching clause_ids from input.
 """
     try:
-        raw = call_model(FLASH_MODEL, SYSTEM_PROMPT, prompt, max_tokens=8192)
+        raw = await call_model(FLASH_MODEL, SYSTEM_PROMPT, prompt, max_tokens=8192)
         classified = extract_json(raw)
         if isinstance(classified, list):
             return {"classified_clauses": classified, "status": "success"}

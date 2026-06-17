@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronDown, ChevronUp, AlertTriangle, Eye, Zap, Scale, GitMerge, MessageSquare } from 'lucide-react';
+import { ChevronDown, ChevronUp, AlertTriangle, Eye, Zap, Scale, MessageSquare } from 'lucide-react';
 import { SeverityBadge } from './RiskComponents';
 
 export default function ClauseCard({ clause, index }) {
@@ -17,6 +17,9 @@ export default function ClauseCard({ clause, index }) {
     { id: 'reasoning',   label: '🧠 Reasoning',    icon: Scale },
     { id: 'negotiate',   label: '🤝 Negotiate',    icon: MessageSquare },
   ];
+
+  const hasDeepAnalysis = !!clause.practical_impact || !!clause.reasoning_trace?.intent_analysis;
+  const activeTabs = tabs.filter(t => t.id === 'explanation' || hasDeepAnalysis);
 
   return (
     <div style={{
@@ -86,25 +89,27 @@ export default function ClauseCard({ clause, index }) {
           </div>
 
           {/* Tabs */}
-          <div style={{ display: 'flex', gap: 1, background: 'var(--glass-border)', border: '1px solid var(--glass-border)', borderRadius: 0, padding: 0, marginBottom: 18 }}>
-            {tabs.map(t => (
-              <button key={t.id} onClick={() => setTab(t.id)}
-                style={{
-                  flex: 1, padding: '8px 12px', borderRadius: 0, border: 'none', cursor: 'pointer',
-                  fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', transition: 'var(--transition)',
-                  background: tab === t.id ? 'var(--text-primary)' : 'var(--bg-base)',
-                  color: tab === t.id ? '#111111' : 'var(--text-muted)',
-                }}>
-                {t.label}
-              </button>
-            ))}
-          </div>
+          {activeTabs.length > 1 && (
+            <div style={{ display: 'flex', gap: 1, background: 'var(--glass-border)', border: '1px solid var(--glass-border)', borderRadius: 0, padding: 0, marginBottom: 18 }}>
+              {activeTabs.map(t => (
+                <button key={t.id} onClick={() => setTab(t.id)}
+                  style={{
+                    flex: 1, padding: '8px 12px', borderRadius: 0, border: 'none', cursor: 'pointer',
+                    fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', transition: 'var(--transition)',
+                    background: tab === t.id ? 'var(--text-primary)' : 'var(--bg-base)',
+                    color: tab === t.id ? '#111111' : 'var(--text-muted)',
+                  }}>
+                  {t.label}
+                </button>
+              ))}
+            </div>
+          )}
 
           {/* Tab Content */}
           <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.7 }}>
             {tab === 'explanation' && (
               <div>
-                <Section title="Plain English Explanation" content={clause.plain_english} />
+                <Section title="Plain English Explanation" content={clause.plain_english || "This clause is standard or low-risk. No complex legal explanation is required."} />
                 {clause.low_confidence_flag && (
                   <div style={{ display: 'flex', gap: 10, alignItems: 'center', padding: '10px 14px',
                     background: 'var(--high-bg)', border: '1px solid var(--high)', borderRadius: 0, marginTop: 12 }}>
@@ -114,14 +119,14 @@ export default function ClauseCard({ clause, index }) {
                 )}
               </div>
             )}
-            {tab === 'impact' && (
+            {tab === 'impact' && hasDeepAnalysis && (
               <div>
                 <Section title="Practical Impact" content={clause.practical_impact} />
                 <Section title="Worst-Case Scenario" content={clause.worst_case_scenario} highlight />
                 <Section title="Standard Comparison" content={clause.standard_comparison} />
               </div>
             )}
-            {tab === 'reasoning' && (
+            {tab === 'reasoning' && hasDeepAnalysis && (
               <div>
                 <Section title="Intent Analysis"     content={clause.reasoning_trace?.intent_analysis} />
                 <Section title="Scope Detection"     content={clause.reasoning_trace?.scope_detection} />
@@ -140,7 +145,7 @@ export default function ClauseCard({ clause, index }) {
                 )}
               </div>
             )}
-            {tab === 'negotiate' && (
+            {tab === 'negotiate' && hasDeepAnalysis && (
               <div>
                 <Section title="Negotiation Recommendation" content={clause.negotiation_recommendation} />
                 {clause.redline_language && (

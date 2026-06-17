@@ -12,8 +12,6 @@
 
 import { callGemini, parseGeminiJson, FLASH_MODEL, PRO_MODEL } from './services/googleGemini.js';
 
-
-/** Legal disclaimer appended to all results and email templates. */
 export const DISCLAIMER =
     'LexGuard is an AI-powered awareness tool and does not constitute legal advice. ' +
     'Consult a licensed attorney in your jurisdiction for legally binding guidance.';
@@ -61,7 +59,7 @@ Return JSON only:
  * @param {string} documentType - The identified document category.
  * @returns {Promise<{clauses: Object[], total_clauses: number, status: string}>}
  */
-export async function agent1Extractor(documentText, documentType) {
+export async function agent1Extractor(documentText, documentType, userPhone) {
     const systemPrompt = `You are a legal document analysis AI (Agent 1 — Extractor).
 Your job is to parse raw legal document text and extract structured clause objects.
 
@@ -96,7 +94,7 @@ ${documentText.slice(0, 40000)}
 Extract ALL clauses from this document. Return a JSON array of clause objects.`;
 
     try {
-        const raw = await callGemini(FLASH_MODEL, systemPrompt, prompt, 8192);
+        const raw = await callGemini(FLASH_MODEL, systemPrompt, prompt, 8192, false, userPhone);
         const clauses = parseGeminiJson(raw);
         if (Array.isArray(clauses)) {
             return { clauses, total_clauses: clauses.length, status: 'success' };
@@ -128,7 +126,7 @@ Extract ALL clauses from this document. Return a JSON array of clause objects.`;
  * @param {string} documentType - Document category for contextual classification.
  * @returns {Promise<{classified_clauses: Object[], status: string}>}
  */
-export async function agent2Classifier(clauses, documentType) {
+export async function agent2Classifier(rawClauses, documentType, userPhone) {
     const systemPrompt = `You are a legal risk classifier AI (Agent 2 — Classifier).
 Given a list of extracted legal clauses, classify each one by risk severity and dimension.
 
@@ -168,7 +166,7 @@ Sub-scores are 0-100. Severity rules:
 
 Output ONLY a JSON array of classified clauses, no extra text.`;
 
-    const clauseTexts = clauses.map((c) => ({
+    const clauseTexts = rawClauses.map((c) => ({
         clause_id: c.clause_id,
         text: (c.raw_text || '').slice(0, 2000),
         type_hint: c.clause_type_hint || '',
@@ -182,7 +180,7 @@ ${JSON.stringify(clauseTexts, null, 2).slice(0, 35000)}
 Classify each clause. Return JSON array matching clause_ids from input.`;
 
     try {
-        const raw = await callGemini(FLASH_MODEL, systemPrompt, prompt, 8192);
+        const raw = await callGemini(FLASH_MODEL, systemPrompt, prompt, 8192, false, userPhone);
         const classified = parseGeminiJson(raw);
         if (Array.isArray(classified)) {
             return { classified_clauses: classified, status: 'success' };
@@ -194,192 +192,91 @@ Classify each clause. Return JSON array matching clause_ids from input.`;
     }
 }
 
-// ─── Agent 3: Legal Reasoner ──────────────────────────────────────────────────
-
-/**
- * Agent 3 — Legal Reasoner: Deep 7-step legal analysis of high-risk clauses.
- * Only processes CRITICAL, HIGH, and MEDIUM severity clauses to save tokens.
- *
- * @param {Object[]} clausesWithClassification - Merged clauses with severity data.
- * @param {string} documentType - Document category context.
- * @returns {Promise<{reasoned_clauses: Object[], status: string}>}
- */
-export async function agent3Reasoner(clausesWithClassification, documentType) {
+// ─── Agent 3: Deep Analyzer (Combined Reasoner, Explainer, Negotiator) ────────
+export async function agent3DeepAnalyzer(clausesWithClassification, documentType, userPhone) {
     const targetClauses = clausesWithClassification.filter((c) =>
         ['CRITICAL', 'HIGH', 'MEDIUM'].includes(c.severity)
     );
 
     if (targetClauses.length === 0) {
-        return { reasoned_clauses: [], status: 'success', message: 'No high-risk clauses found' };
+        return { analyzed_clauses: [], negotiation_output: {}, status: 'success' };
     }
 
-    const systemPrompt = `You are an expert legal reasoning AI (Agent 3 — Legal Reasoner).
-You perform deep, structured legal analysis using a 7-step framework.
+    const systemPrompt = `You are a combined Legal Reasoner, Explainer, and Negotiation Advisor AI (Agent 3).
+For each clause provided, perform a deep legal analysis, explain it simply, and recommend negotiation strategies.
 
-For each clause (MEDIUM/HIGH/CRITICAL only), output:
+Output a JSON object with exactly these two keys:
+1. "analyzed_clauses": an array of objects for each input clause.
+2. "negotiation_output": an overall negotiation strategy for the entire document.
+
 {
-  "clause_id": "C001",
-  "reasoning_trace": {
-    "intent_analysis": "Legal/business purpose of this clause",
-    "scope_detection": "Geographic scope, duration, subject matter breadth",
-    "implication_inference": "All practical consequences to the signing party",
-    "adversarial_simulation": "Worst-case exploitation by counterparty",
-    "contradiction_scan": ["clause IDs this contradicts"],
-    "undefined_terms": ["vague/exploitable undefined terms"],
-    "standard_comparison_summary": "How this compares to industry standard"
-  },
-  "overall_risk_assessment": "3-4 sentence risk summary"
-}
-
-Rules:
-- NEVER fabricate legal precedents or case citations
-- Clearly state when jurisdiction is uncertain
-- Focus on protecting the user
-- Output ONLY a JSON array. No extra text.`;
-
-    const prompt = `Document Type: ${documentType}
-
-Clauses requiring deep reasoning:
-${JSON.stringify(targetClauses.slice(0, 20), null, 2).slice(0, 35000)}
-
-Apply the 7-step legal reasoning framework to each clause.
-Return a JSON array of reasoning objects.`;
-
-    try {
-        const raw = await callGemini(PRO_MODEL, systemPrompt, prompt, 8192);
-        const reasoned = parseGeminiJson(raw);
-        if (Array.isArray(reasoned)) {
-            return { reasoned_clauses: reasoned, status: 'success' };
-        }
-        return { reasoned_clauses: [], status: 'error' };
-    } catch (err) {
-        console.warn('[Agent3] Reasoning failed:', err?.message);
-        return { reasoned_clauses: [], status: 'error', error: err.message };
-    }
-}
-
-// ─── Agent 4: Explainer ───────────────────────────────────────────────────────
-
-/**
- * Agent 4 — Explainer: Generates plain-English explanation cards for every clause.
- *
- * @param {Object[]} mergedClauses - Clauses merged with extraction + classification + reasoning.
- * @param {string} documentType - Document category context.
- * @returns {Promise<{explanation_cards: Object[], status: string}>}
- */
-export async function agent4Explainer(mergedClauses, documentType) {
-    const systemPrompt = `You are a legal simplification AI (Agent 4 — Explainer).
-Transform legal clause analysis into clear, Grade 8-10 reading level explanation cards.
-
-For each clause, produce:
-{
-  "clause_id": "C001",
-  "plain_english": "Simple 2-3 sentence explanation of what this clause actually means",
-  "practical_impact": "How does this affect the person signing RIGHT NOW and in the future?",
-  "worst_case_scenario": "If the other party exploits this clause maximally, what happens?",
-  "standard_comparison": "Is this clause normal/typical? How does it differ from standard?",
-  "negotiation_recommendation": "Should they accept, reject, or negotiate? What specifically to ask for?",
-  "confidence": 0.92,
-  "low_confidence_flag": false,
-  "low_confidence_reason": ""
-}
-
-Rules:
-- Set low_confidence_flag = true if confidence < 0.75
-- Use "may", "typically", "generally" when uncertain
-- Focus on practical impact over legal theory
-- Output ONLY a JSON array. No extra text.`;
-
-    const prompt = `Document Type: ${documentType}
-
-All clauses with classification and reasoning:
-${JSON.stringify(mergedClauses.slice(0, 30), null, 2).slice(0, 35000)}
-
-Generate an explanation card for EVERY clause. Return a JSON array.`;
-
-    try {
-        const raw = await callGemini(PRO_MODEL, systemPrompt, prompt, 8192);
-        const explanations = parseGeminiJson(raw);
-        if (Array.isArray(explanations)) {
-            return { explanation_cards: explanations, status: 'success' };
-        }
-        return { explanation_cards: [], status: 'error' };
-    } catch (err) {
-        console.warn('[Agent4] Explanation failed:', err?.message);
-        return { explanation_cards: [], status: 'error', error: err.message };
-    }
-}
-
-// ─── Agent 5: Negotiation Advisor ────────────────────────────────────────────
-
-/**
- * Agent 5 — Negotiation Advisor: Produces a comprehensive negotiation strategy.
- * Generates redlines, power dynamics assessment, and a professional email template.
- *
- * @param {Object[]} mergedClauses - Fully enriched clause objects.
- * @param {string} documentType - Document category context.
- * @param {number} overallRiskScore - Computed overall risk score (0-100).
- * @returns {Promise<{negotiation_output: Object, status: string}>}
- */
-export async function agent5Negotiator(mergedClauses, documentType, overallRiskScore) {
-    const systemPrompt = `You are a contract negotiation strategy AI (Agent 5 — Negotiation Advisor).
-
-Given the full clause analysis, output ONE comprehensive negotiation strategy object:
-{
-  "negotiation_strategy": {
-    "reject_outright": ["clause_id list"],
-    "redline_and_counter": ["clause_id list"],
-    "accept_with_clarification": ["clause_id list"],
-    "accept_as_is": ["clause_id list"]
-  },
-  "top_priority_negotiation_item": "The single most important thing to negotiate first",
-  "redline_suggestions": [
+  "analyzed_clauses": [
     {
       "clause_id": "C001",
-      "original_excerpt": "...",
-      "suggested_replacement": "...",
-      "reason": "Why this change protects the user"
+      "reasoning_trace": {
+        "intent_analysis": "Legal/business purpose",
+        "scope_detection": "Geographic scope, duration",
+        "implication_inference": "All practical consequences",
+        "adversarial_simulation": "Worst-case exploitation",
+        "contradiction_scan": ["clause IDs this contradicts"],
+        "undefined_terms": ["vague/exploitable undefined terms"],
+        "standard_comparison_summary": "How this compares to standard"
+      },
+      "overall_risk_assessment": "3-4 sentence risk summary",
+      "plain_english": "Simple 2-3 sentence explanation",
+      "practical_impact": "How it affects the person RIGHT NOW",
+      "worst_case_scenario": "If exploited maximally",
+      "standard_comparison": "Is this typical?",
+      "negotiation_recommendation": "Accept, reject, or negotiate?",
+      "redline_language": "Suggested replacement text if any",
+      "confidence": 0.92,
+      "low_confidence_flag": false
     }
   ],
-  "negotiation_email_template": "Full professional email text",
-  "power_dynamics": "Brief assessment of negotiating position",
-  "walk_away_triggers": ["Conditions under which user should refuse to sign"]
+  "negotiation_output": {
+    "negotiation_strategy": {
+      "reject_outright": ["C001"],
+      "redline_and_counter": ["C002"],
+      "accept_with_clarification": [],
+      "accept_as_is": []
+    },
+    "top_priority_negotiation_item": "The single most important thing to negotiate",
+    "redline_suggestions": [
+      {
+        "clause_id": "C002",
+        "original_excerpt": "...",
+        "suggested_replacement": "...",
+        "reason": "Why this change protects the user"
+      }
+    ],
+    "negotiation_email_template": "Professional email text",
+    "power_dynamics": "Brief assessment",
+    "walk_away_triggers": ["Conditions to refuse signing"]
+  }
 }
 
-Rules:
-- Be realistic about negotiating power
-- Prioritize by severity (CRITICAL first)
-- Email template should be professional, not aggressive
-- Output ONLY the JSON object above. No extra text.`;
-
-    const summaryClauses = mergedClauses.map((c) => ({
-        clause_id: c.clause_id,
-        clause_type: c.clause_type || 'General',
-        severity: c.severity,
-        raw_text: (c.raw_text || '').slice(0, 500),
-        plain_english: c.plain_english || '',
-        practical_impact: c.practical_impact || '',
-    }));
+Output ONLY valid JSON. No extra text.`;
 
     const prompt = `Document Type: ${documentType}
-Overall Risk Score: ${overallRiskScore}/100
 
-All clauses summary:
-${JSON.stringify(summaryClauses.slice(0, 30), null, 2).slice(0, 30000)}
+Clauses to analyze:
+${JSON.stringify(targetClauses.slice(0, 30), null, 2).slice(0, 35000)}
 
-Generate the comprehensive negotiation strategy.
-End the negotiation_email_template with this disclaimer:
-"${DISCLAIMER}"`;
+Return the single combined JSON object.`;
 
     try {
-        const raw = await callGemini(PRO_MODEL, systemPrompt, prompt, 8192);
-        const strategy = parseGeminiJson(raw);
-        if (typeof strategy === 'object' && strategy !== null) {
-            return { negotiation_output: strategy, status: 'success' };
+        const raw = await callGemini(PRO_MODEL, systemPrompt, prompt, 8192, false, userPhone);
+        const data = parseGeminiJson(raw);
+        if (data && Array.isArray(data.analyzed_clauses)) {
+            return {
+                analyzed_clauses: data.analyzed_clauses,
+                negotiation_output: data.negotiation_output || {},
+                status: 'success'
+            };
         }
-        return { negotiation_output: {}, status: 'error' };
+        return { analyzed_clauses: [], negotiation_output: {}, status: 'error' };
     } catch (err) {
-        console.warn('[Agent5] Negotiation strategy failed:', err?.message);
-        return { negotiation_output: {}, status: 'error', error: err.message };
+        console.warn('[Agent3] Deep Analysis failed:', err?.message);
+        return { analyzed_clauses: [], negotiation_output: {}, status: 'error', error: err.message };
     }
 }

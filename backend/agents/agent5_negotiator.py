@@ -2,6 +2,7 @@
 AGENT 5 — NEGOTIATION ADVISOR
 Uses Gemini Pro to generate redlines, alternative wording, and a negotiation email template.
 """
+import json
 from agents import call_model, extract_json, PRO_MODEL
 
 SYSTEM_PROMPT = """You are a contract negotiation strategy AI (Agent 5 — Negotiation Advisor).
@@ -69,7 +70,7 @@ End the negotiation_email_template with this disclaimer:
 "{DISCLAIMER}"
 """
     try:
-        raw = call_model(PRO_MODEL, SYSTEM_PROMPT, prompt, max_tokens=8192)
+        raw = await call_model(PRO_MODEL, SYSTEM_PROMPT, prompt, max_tokens=8192)
         strategy = extract_json(raw)
         if isinstance(strategy, dict):
             return {"negotiation_output": strategy, "status": "success"}

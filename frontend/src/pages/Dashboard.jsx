@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Shield, Clock, FileText, TrendingUp, BarChart2 } from 'lucide-react';
 import { api, DISCLAIMER } from '../services/api';
-import { RiskGauge, SeverityBadge } from '../components/RiskComponents';
 import DocumentUploader from '../components/DocumentUploader';
 import AnalysisPage from './AnalysisPage';
 
@@ -9,23 +8,20 @@ export default function Dashboard() {
   const [view, setView]         = useState('home');   // 'home' | 'analysis'
   const [result, setResult]     = useState(null);
   const [sessions, setSessions] = useState([]);
-  const [loadingSessions, setLoadingSessions] = useState(false);
-
-  useEffect(() => {
-    loadSessions();
-  }, []);
 
   const loadSessions = async () => {
-    setLoadingSessions(true);
     try {
       const data = await api.getSessions();
       setSessions(data.sessions || []);
-    } catch (e) {
+    } catch {
       // ignore
-    } finally {
-      setLoadingSessions(false);
     }
   };
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadSessions();
+  }, []);
 
   const handleAnalysisComplete = (r) => {
     setResult(r);
@@ -55,7 +51,7 @@ export default function Dashboard() {
           </span>
         </h1>
         <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', maxWidth: 540, margin: '0 auto 40px', lineHeight: 1.6 }}>
-          Upload any legal agreement. Our 5-agent architectural pipeline isolates risk, exposes one-sided clauses, and drafts redlines — instantly.
+          Upload any legal agreement. Our 3-agent architectural pipeline isolates risk, exposes one-sided clauses, and drafts redlines — instantly.
         </p>
       </div>
 
@@ -65,11 +61,11 @@ export default function Dashboard() {
       {/* Stats Row */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1px', background: 'var(--glass-border)', border: '1px solid var(--glass-border)', marginTop: 56, marginBottom: 48 }}>
         {[
-          { icon: Shield,    label: 'Risk Dimensions',  value: '7',    color: 'var(--text-primary)' },
-          { icon: BarChart2, label: 'Clause Categories',value: '40+',  color: 'var(--text-secondary)' },
-          { icon: TrendingUp,label: 'AI Agents',        value: '5',    color: 'var(--text-primary)' },
-          { icon: FileText,  label: 'Document Types',   value: '25+',  color: 'var(--text-secondary)' },
-        ].map(({ icon: Icon, label, value, color }) => (
+          { icon: Shield,    label: 'Risk Dimensions',  value: '7' },
+          { icon: BarChart2, label: 'Clause Categories',value: '40+' },
+          { icon: TrendingUp,label: 'AI Agents',        value: '3' },
+          { icon: FileText,  label: 'Document Types',   value: '25+' },
+        ].map(({ icon: Icon, label, value }) => (
           <div key={label} className="glass-card" style={{ padding: '24px', display: 'flex', alignItems: 'center', gap: 16, background: 'var(--bg-base)', border: 'none' }}>
             <div style={{ width: 44, height: 44, borderRadius: 0, background: 'var(--bg-surface)',
               border: `1px solid var(--glass-border)`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>

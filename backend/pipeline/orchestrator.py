@@ -25,7 +25,7 @@ Document text (first 3000 chars):
 Return JSON only:
 {{"document_type": "...", "confidence": 0.95, "secondary_type": "..."}}
 """
-    response_text = call_model(FLASH_MODEL, "You are a legal document analyzer. Output only JSON.", prompt)
+    response_text = await call_model(FLASH_MODEL, "You are a legal document analyzer. Output only JSON.", prompt)
     try:
         result = extract_json(response_text)
         return result

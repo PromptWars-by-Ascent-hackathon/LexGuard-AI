@@ -1,15 +1,19 @@
-import { Shield, ExternalLink, GitBranch, Moon, Sun } from 'lucide-react';
+import { Shield, GitBranch, Moon, Sun } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { DISCLAIMER } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 export default function Navbar() {
-  const [theme, setTheme] = useState('dark');
+  const { user, logout } = useAuth();
+  const [theme, setTheme] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('theme') || 'dark';
+    }
+    return 'dark';
+  });
 
   useEffect(() => {
-    const savedTheme = localStorage.getItem('theme') || 'dark';
-    setTheme(savedTheme);
-    document.documentElement.setAttribute('data-theme', savedTheme);
-  }, []);
+    document.documentElement.setAttribute('data-theme', theme);
+  }, [theme]);
 
   const toggleTheme = () => {
     const newTheme = theme === 'dark' ? 'light' : 'dark';
@@ -49,16 +53,28 @@ export default function Navbar() {
 
       {/* Right side */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-        <span style={{
-          fontSize: '0.62rem', color: 'var(--text-secondary)',
-          padding: '4px 12px', borderRadius: 9999,
-          border: '1px solid var(--glass-border)',
-          textTransform: 'uppercase',
-          letterSpacing: '0.08em',
-          fontWeight: 600,
-        }} className="hide-mobile">
-          Powered by Gemini AI
-        </span>
+        {user && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', marginRight: 8 }} className="hide-mobile">
+              <span style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-primary)' }}>{user.name}</span>
+              <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>{user.phone}</span>
+            </div>
+            <button 
+              onClick={logout}
+              style={{
+                fontSize: '0.65rem', color: 'var(--text-secondary)',
+                padding: '6px 14px', borderRadius: 0,
+                background: 'transparent', border: '1px solid var(--glass-border)',
+                textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700,
+                cursor: 'pointer', transition: 'var(--transition)'
+              }}
+              onMouseEnter={e => { e.currentTarget.style.color = 'var(--text-primary)'; e.currentTarget.style.background = 'var(--bg-elevated)'; }}
+              onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-secondary)'; e.currentTarget.style.background = 'transparent'; }}
+            >
+              Sign Out
+            </button>
+          </div>
+        )}
         <button onClick={toggleTheme} aria-label={theme === 'dark' ? "Switch to light theme" : "Switch to dark theme"} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', display: 'flex', transition: 'var(--transition)' }}
           onMouseEnter={e => e.currentTarget.style.color = 'var(--text-primary)'}
           onMouseLeave={e => e.currentTarget.style.color = 'var(--text-muted)'}>

@@ -16,12 +16,14 @@
  *   GET  /api/v1/sessions                  — List all sessions
  */
 
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import multer from 'multer';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
+import authRoutes from './routes/auth.js';
 
 dotenv.config();
 
@@ -44,7 +46,10 @@ app.use(cors({
     methods: ['GET', 'POST', 'OPTIONS'],
 }));
 
-app.use(express.json({ limit: '1mb' })); // Prevent JSON body abuse
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+app.use('/api/auth', authRoutes);
 
 // ── Rate Limiting ─────────────────────────────────────────────────────────────
 
@@ -122,9 +127,10 @@ app.post('/api/v1/documents/upload', uploadLimiter, upload.single('file'), async
         );
 
         const sessionId = createSession(req.file.originalname);
+        const userPhone = req.body.userPhone;
 
         // Fire-and-forget pipeline — does not block HTTP response
-        runPipeline(text, sessionId, req.file.originalname, { originalLanguage, wasTranslated });
+        runPipeline(text, sessionId, req.file.originalname, { originalLanguage, wasTranslated, userPhone });
 
         res.json({
             session_id: sessionId,
@@ -204,6 +210,27 @@ app.get('/api/v1/analysis/:session_id', (req, res) => {
 app.get('/api/v1/sessions', (_req, res) => {
     const list = getAllSessions();
     res.json({ sessions: list, total: list.length });
+});
+
+// ── Static Files & SPA Routing ────────────────────────────────────────────────
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const staticDir = path.join(__dirname, 'static');
+app.use(express.static(staticDir));
+
+app.use((req, res, next) => {
+    if (req.path.startsWith('/api/')) {
+        return next();
+    }
+    res.sendFile(path.join(staticDir, 'index.html'), (err) => {
+        if (err) {
+            res.status(200).send('LexGuard API is running. Frontend static assets not found.');
+        }
+    });
 });
 
 // ── Global Error Handler ───────────────────────────────────────────────────────

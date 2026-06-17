@@ -2,6 +2,7 @@
 AGENT 4 — EXPLAINER
 Uses Gemini Pro to generate user-friendly explanation cards for every clause.
 """
+import json
 from agents import call_model, extract_json, PRO_MODEL
 
 SYSTEM_PROMPT = """You are a legal simplification AI (Agent 4 — Explainer).
@@ -44,7 +45,7 @@ Generate an explanation card for EVERY clause listed above.
 Return a JSON array with one card per clause.
 """
     try:
-        raw = call_model(PRO_MODEL, SYSTEM_PROMPT, prompt, max_tokens=8192)
+        raw = await call_model(PRO_MODEL, SYSTEM_PROMPT, prompt, max_tokens=8192)
         explanations = extract_json(raw)
         if isinstance(explanations, list):
             return {"explanation_cards": explanations, "status": "success"}

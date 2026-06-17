@@ -5,9 +5,10 @@ const API_BASE = window.location.hostname === 'localhost' || window.location.hos
 
 export const api = {
   // Upload document and start analysis
-  async uploadDocument(file, onProgress) {
+  async uploadDocument(file, userPhone) {
     const formData = new FormData();
     formData.append('file', file);
+    if (userPhone) formData.append('userPhone', userPhone);
     const res = await fetch(`${API_BASE}/api/v1/documents/upload`, {
       method: 'POST',
       body: formData,

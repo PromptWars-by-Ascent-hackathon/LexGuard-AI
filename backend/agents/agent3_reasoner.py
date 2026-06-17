@@ -55,7 +55,7 @@ Apply the 7-step legal reasoning framework to each clause.
 Return a JSON array of reasoning objects.
 """
     try:
-        raw = call_model(PRO_MODEL, SYSTEM_PROMPT, prompt, max_tokens=8192)
+        raw = await call_model(PRO_MODEL, SYSTEM_PROMPT, prompt, max_tokens=8192)
         reasoned = extract_json(raw)
         if isinstance(reasoned, list):
             return {"reasoned_clauses": reasoned, "status": "success"}

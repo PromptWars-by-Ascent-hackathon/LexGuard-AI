@@ -10,9 +10,7 @@ import {
     detectDocumentType,
     agent1Extractor,
     agent2Classifier,
-    agent3Reasoner,
-    agent4Explainer,
-    agent5Negotiator,
+    agent3DeepAnalyzer,
     DISCLAIMER,
 } from './agents.js';
 import { calculateRiskScore, countBySeverity, SEVERITY_ORDER } from './utils/riskScoring.js';
@@ -104,57 +102,44 @@ export async function runPipeline(documentText, sessionId, filename, translation
 
         // ── Stage 1: Agent 1 — Extractor ──────────────────────────────────────
         updateProgress(sessionId, 1, 'Agent 1: Extracting clauses...');
-        const extraction = await agent1Extractor(documentText, documentType);
+        const extraction = await agent1Extractor(documentText, documentType, translationMeta.userPhone);
         const rawClauses = extraction.clauses || [];
 
         // ── Stage 2: Agent 2 — Classifier ─────────────────────────────────────
         updateProgress(sessionId, 2, 'Agent 2: Classifying risk levels...');
-        const classification = await agent2Classifier(rawClauses, documentType);
+        const classification = await agent2Classifier(rawClauses, documentType, translationMeta.userPhone);
         const classified = classification.classified_clauses || [];
 
         const classMap = new Map(classified.map((c) => [c.clause_id, c]));
         const merged1 = rawClauses.map((rc) => ({ ...rc, ...(classMap.get(rc.clause_id) || {}) }));
 
-        // ── Stage 3: Agent 3 — Legal Reasoner ─────────────────────────────────
-        updateProgress(sessionId, 3, 'Agent 3: Reasoning through legal implications...');
-        const reasoning = await agent3Reasoner(merged1, documentType);
-        const reasoned = reasoning.reasoned_clauses || [];
+        // ── Stage 3: Agent 3 — Deep Analyzer ─────────────────────────────────
+        updateProgress(sessionId, 3, 'Agent 3: Deep Legal Analysis & Strategy...');
+        const analysis = await agent3DeepAnalyzer(merged1, documentType, translationMeta.userPhone);
+        const analyzed = analysis.analyzed_clauses || [];
+        const negOutput = analysis.negotiation_output || {};
 
-        const reasonMap = new Map(reasoned.map((r) => [r.clause_id, r]));
-        const merged2 = merged1.map((m) => ({
-            ...m,
-            reasoning_trace: reasonMap.get(m.clause_id)?.reasoning_trace || {},
-            overall_risk_assessment: reasonMap.get(m.clause_id)?.overall_risk_assessment || '',
-        }));
-
-        // ── Stage 4: Agent 4 — Explainer ──────────────────────────────────────
-        updateProgress(sessionId, 4, 'Agent 4: Generating plain-English explanations...');
-        const explanation = await agent4Explainer(merged2, documentType);
-        const explanations = explanation.explanation_cards || [];
-
-        const explainMap = new Map(explanations.map((e) => [e.clause_id, e]));
-        const merged3 = merged2.map((m) => {
-            const e = explainMap.get(m.clause_id) || {};
+        const analyzeMap = new Map(analyzed.map((r) => [r.clause_id, r]));
+        const merged3 = merged1.map((m) => {
+            const a = analyzeMap.get(m.clause_id) || {};
             return {
                 ...m,
-                plain_english: e.plain_english || '',
-                practical_impact: e.practical_impact || '',
-                worst_case_scenario: e.worst_case_scenario || '',
-                standard_comparison: e.standard_comparison || '',
-                negotiation_recommendation: e.negotiation_recommendation || '',
-                confidence: e.confidence || 0.85,
-                low_confidence_flag: e.low_confidence_flag || false,
+                reasoning_trace: a.reasoning_trace || {},
+                overall_risk_assessment: a.overall_risk_assessment || '',
+                plain_english: a.plain_english || '',
+                practical_impact: a.practical_impact || '',
+                worst_case_scenario: a.worst_case_scenario || '',
+                standard_comparison: a.standard_comparison || '',
+                negotiation_recommendation: a.negotiation_recommendation || '',
+                redline_language: a.redline_language || '',
+                confidence: a.confidence || 0.85,
+                low_confidence_flag: a.low_confidence_flag || false,
             };
         });
 
         // ── Risk Score Computation ─────────────────────────────────────────────
         const risk = calculateRiskScore(merged3);
         const overallScore = risk.overall;
-
-        // ── Stage 5: Agent 5 — Negotiation Advisor ────────────────────────────
-        updateProgress(sessionId, 5, 'Agent 5: Building negotiation strategy...');
-        const negotiation = await agent5Negotiator(merged3, documentType, overallScore);
-        const negOutput = negotiation.negotiation_output || {};
 
         // ── Await NL Entity Extraction ─────────────────────────────────────────
         const entities = await entityPromise;
@@ -208,7 +193,7 @@ export async function runPipeline(documentText, sessionId, filename, translation
         if (session) {
             session.status = 'completed';
             session.result = result;
-            session.progress = { agent: 5, message: 'Analysis complete!' };
+            session.progress = { agent: 3, message: 'Analysis complete!' };
             sessions.set(sessionId, session);
         }
     } catch (err) {

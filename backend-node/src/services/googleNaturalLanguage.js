@@ -26,8 +26,10 @@
  * @returns {Promise<{parties: string[], monetaryValues: string[], dates: string[], locations: string[], organizations: string[], rawEntities: Object[]}>}
  *   Structured entity extraction result.
  */
+import { keyManager } from './KeyManager.js';
+
 export async function extractLegalEntities(text) {
-    const apiKey = process.env.GEMINI_API_KEY; // GCP API key (same project)
+    const apiKey = keyManager.keys[keyManager.currentIndex]; // Use current key
     const endpoint = `https://language.googleapis.com/v1/documents:analyzeEntities?key=${apiKey}`;
 
     try {

@@ -15,8 +15,7 @@
 
 import { GoogleGenAI } from '@google/genai';
 import crypto from 'crypto';
-
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+import { keyManager } from './KeyManager.js';
 
 /** Primary model for all agents */
 export const FLASH_MODEL = 'gemini-2.5-flash';
@@ -48,7 +47,7 @@ function hashKey(input) {
  * @returns {Promise<string>} The raw text response from Gemini.
  * @throws {Error} Propagates Gemini API errors after logging them.
  */
-export async function callGemini(model, systemPrompt, userPrompt, maxTokens = 8192, useCache = false) {
+export async function callGemini(model, systemPrompt, userPrompt, maxTokens = 8192, useCache = false, userPhone = null) {
     if (useCache) {
         const cacheKey = hashKey(model + systemPrompt + userPrompt);
         const cached = responseCache.get(cacheKey);
@@ -57,28 +56,41 @@ export async function callGemini(model, systemPrompt, userPrompt, maxTokens = 81
         }
     }
 
-    try {
-        const response = await ai.models.generateContent({
-            model,
-            contents: userPrompt,
-            config: {
-                systemInstruction: systemPrompt,
-                temperature: 0.2,
-                maxOutputTokens: maxTokens,
-            },
-        });
+    const maxRetries = keyManager.keys.length;
+    let attempt = 0;
 
-        const text = response.text;
+    while (attempt <= maxRetries) {
+        try {
+            const ai = keyManager.getClient();
+            const response = await ai.models.generateContent({
+                model,
+                contents: userPrompt,
+                config: {
+                    systemInstruction: systemPrompt,
+                    temperature: 0.2,
+                    maxOutputTokens: maxTokens,
+                },
+            });
 
-        if (useCache) {
-            const cacheKey = hashKey(model + systemPrompt + userPrompt);
-            responseCache.set(cacheKey, { value: text, ts: Date.now() });
+            const text = response.text;
+
+            if (useCache) {
+                const cacheKey = hashKey(model + systemPrompt + userPrompt);
+                responseCache.set(cacheKey, { value: text, ts: Date.now() });
+            }
+
+            return text;
+        } catch (err) {
+            const isQuotaExhausted = err.message?.includes('429') || err.message?.includes('API_KEY_INVALID') || err.message?.includes('quota');
+            if (isQuotaExhausted && attempt < maxRetries) {
+                console.warn(`[Gemini] Quota exhausted on key ${keyManager.currentIndex}. Rotating...`);
+                await keyManager.rotateKey(userPhone);
+                attempt++;
+                continue;
+            }
+            console.error(`[Gemini] API error on model ${model}:`, err?.message || err);
+            throw err;
         }
-
-        return text;
-    } catch (err) {
-        console.error(`[Gemini] API error on model ${model}:`, err?.message || err);
-        throw err;
     }
 }
 

@@ -41,7 +41,7 @@ async def run(document_text: str, document_type: str) -> dict:
 Extract ALL clauses from this document. Return a JSON array of clause objects.
 """
     try:
-        raw = call_model(FLASH_MODEL, SYSTEM_PROMPT, prompt, max_tokens=8192)
+        raw = await call_model(FLASH_MODEL, SYSTEM_PROMPT, prompt, max_tokens=8192)
         clauses = extract_json(raw)
         if isinstance(clauses, list):
             return {"clauses": clauses, "total_clauses": len(clauses), "status": "success"}
