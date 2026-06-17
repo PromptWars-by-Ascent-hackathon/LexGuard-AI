@@ -9,7 +9,7 @@ WORKDIR /frontend
 
 # Copy frontend packages first to utilize caching
 COPY frontend/package.json frontend/package-lock.json ./
-RUN npm ci
+RUN npm install
 
 # Copy the rest of frontend and build
 COPY frontend/ ./
@@ -21,7 +21,7 @@ WORKDIR /app
 
 # Install backend production dependencies
 COPY backend-node/package.json backend-node/package-lock.json ./
-RUN npm ci --omit=dev && npm cache clean --force
+RUN npm install --omit=dev && npm cache clean --force
 
 # Copy backend source
 COPY backend-node/src/ ./src/
