@@ -30,8 +30,7 @@ export default function Signup() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Signup failed');
 
-      login(data.user, data.token);
-      navigate('/');
+      navigate('/login');
     } catch (err) {
       setError(err.message);
     } finally {
