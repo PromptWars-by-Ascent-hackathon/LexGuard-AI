@@ -6,7 +6,7 @@
 <br />
 
 <p>
-  <a href="https://promptwars-community-x-ascen.web.app"><img src="https://img.shields.io/badge/🚀_LIVE_DEMO-Try_LexGuard_AI-e94560?style=for-the-badge&labelColor=1a1a2e" alt="Live Demo" /></a>
+  <a href="https://lexguard-ai-204677140973.us-central1.run.app"><img src="https://img.shields.io/badge/🚀_LIVE_DEMO-Try_LexGuard_AI-e94560?style=for-the-badge&labelColor=1a1a2e" alt="Live Demo" /></a>
   &nbsp;
   <a href="https://github.com/Ndheeraj906/LexGuard-AI/actions/workflows/test.yml"><img src="https://img.shields.io/github/actions/workflow/status/Ndheeraj906/LexGuard-AI/test.yml?branch=main&style=for-the-badge&label=CI&logo=githubactions&logoColor=white&labelColor=1a1a2e&color=4ecca3" alt="CI Status" /></a>
   &nbsp;
