@@ -664,7 +664,7 @@ Distributed under the **MIT License** — see [`LICENSE`](./LICENSE) for details
 
 <br /><br />
 
-<a href="https://promptwars-community-x-ascen.web.app"><img src="https://img.shields.io/badge/🚀_Live_Demo-e94560?style=for-the-badge&labelColor=1a1a2e" /></a>
+<a href="https://lexguard-ai-204677140973.us-central1.run.app/login"><img src="https://img.shields.io/badge/🚀_Live_Demo-e94560?style=for-the-badge&labelColor=1a1a2e" /></a>
 &nbsp;
 <a href="https://github.com/Ndheeraj906/LexGuard-AI"><img src="https://img.shields.io/badge/📂_Source_Code-4ecca3?style=for-the-badge&labelColor=1a1a2e" /></a>
 &nbsp;
